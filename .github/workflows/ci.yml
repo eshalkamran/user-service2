@@ -46,15 +46,9 @@ jobs:
         run: |
           docker network inspect eureka-network || docker network create eureka-network
 
-      - name: Start Eureka Server
-        run: docker-compose up -d eureka-server
-
-      - name: Wait for Eureka Server to be ready
-        run: sleep 30  # Adjust this as needed
-
       - name: Set up Docker Compose for User Service
         working-directory: .
-        run: docker-compose up -d --build user-service
+        run: docker-compose up -d --build
 
       - name: Wait for User Service to be ready
         run: sleep 90  # Increased wait time to allow service registration
