@@ -46,8 +46,15 @@ jobs:
         run: |
           docker network inspect eureka-network || docker network create eureka-network
 
+      - name: Set Eureka Server IP Address
+        run: |
+          EUREKA_IP=$(ipconfig getifaddr en0)
+          echo "EUREKA_IP=$EUREKA_IP" >> $GITHUB_ENV
+
       - name: Set up Docker Compose for User Service
         working-directory: .
+        env:
+          EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://${{ env.EUREKA_IP }}:8761/eureka/
         run: docker-compose up -d --build
 
       - name: Wait for User Service to be ready
@@ -64,7 +71,7 @@ jobs:
         run: |
           echo "Verifying if the user-service is registered with Eureka..."
           for i in {1..5}; do
-            curl -s http://localhost:8761/eureka/apps/USER-SERVICE | grep "<application>" && exit 0
+            curl -s http://${{ env.EUREKA_IP }}:8761/eureka/apps/USER-SERVICE | grep "<application>" && exit 0
             echo "Service not registered yet. Retrying in 10 seconds..."
             sleep 10
           done
