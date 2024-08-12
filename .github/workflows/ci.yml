@@ -51,7 +51,7 @@ jobs:
         run: docker-compose up -d --build
 
       - name: Wait for User Service to be ready
-        run: sleep 30
+        run: sleep 60  # Increased wait time to allow service registration
 
       - name: Capture logs for User Service
         working-directory: .
@@ -69,7 +69,13 @@ jobs:
       - name: Verify Registration with Eureka
         run: |
           echo "Verifying if the user-service is registered with Eureka..."
-          curl -s http://localhost:8761/eureka/apps/USER-SERVICE | grep "<application>" || exit 1
+          for i in {1..5}; do
+            curl -s http://localhost:8761/eureka/apps/USER-SERVICE | grep "<application>" && exit 0
+            echo "Service not registered yet. Retrying in 10 seconds..."
+            sleep 10
+          done
+          echo "Service failed to register with Eureka."
+          exit 1
         shell: bash
 
       - name: Force remove any containers still running
