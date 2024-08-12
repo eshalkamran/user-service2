@@ -1,0 +1,66 @@
+name: CI/CD Pipeline for User Service
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code for User Service
+        uses: actions/checkout@v2
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+
+      - name: Verify Docker Compose Installation
+        run: docker-compose --version
+
+      - name: Set up Docker Compose for User Service
+        working-directory: .
+        run: docker-compose up -d --build
+
+      - name: Wait for User Service to be ready
+        run: sleep 30
+
+      - name: Capture logs for User Service
+        working-directory: .
+        run: docker logs user-service
+
+      - name: List running containers
+        run: docker ps -a
+
+      - name: Test User Service Status
+        run: python3 scripts/test_service.py
+
+      - name: Integration Test with Curl
+        run: python3 scripts/integration_test.py
+
+      - name: Verify Registration with Eureka
+        run: |
+          echo "Verifying if the user-service is registered with Eureka..."
+          curl -s http://localhost:8761/eureka/apps/USER-SERVICE | grep "<application>" || exit 1
+        shell: bash
+
+      - name: Force remove any containers still running
+        run: |
+          docker stop $(docker ps -q) || true  # Stop any running containers, ignore errors if none are running
+          docker rm $(docker ps -a -q) || true  # Force removal of all containers
+
+      - name: Final cleanup for Docker networks
+        run: |
+          docker network prune -f
+
+      - name: List all containers and networks
+        run: |
+          docker ps -a
+          docker network ls
