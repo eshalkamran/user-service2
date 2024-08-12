@@ -18,4 +18,5 @@ services:
 
 networks:
   auth_net:
+    name: eureka-network
     external: true

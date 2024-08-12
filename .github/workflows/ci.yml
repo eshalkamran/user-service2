@@ -25,6 +25,10 @@ jobs:
       - name: Verify Docker Compose Installation
         run: docker-compose --version
 
+      - name: Create network if not exists
+        run: |
+          docker network inspect eureka-network || docker network create eureka-network
+
       - name: Set up Docker Compose for User Service
         working-directory: .
         run: docker-compose up -d --build
