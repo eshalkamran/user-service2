@@ -51,7 +51,7 @@ jobs:
         run: docker-compose up -d --build
 
       - name: Wait for User Service to be ready
-        run: sleep 60  # Increased wait time to allow service registration
+        run: sleep 90  # Increased wait time to allow service registration
 
       - name: Capture logs for User Service
         working-directory: .
@@ -59,12 +59,6 @@ jobs:
 
       - name: List running containers
         run: docker ps -a
-
-      - name: Test User Service Status
-        run: python3 scripts/test_service.py
-
-      - name: Integration Test with Curl
-        run: python3 scripts/integration_test.py
 
       - name: Verify Registration with Eureka
         run: |
@@ -77,6 +71,9 @@ jobs:
           echo "Service failed to register with Eureka."
           exit 1
         shell: bash
+
+      - name: Run Tests
+        run: mvn test
 
       - name: Force remove any containers still running
         run: |
