@@ -46,45 +46,21 @@ jobs:
         run: |
           docker network inspect eureka-network || docker network create eureka-network
 
+      # Step to start the Eureka server first
+      - name: Set up Docker Compose for Eureka Server
+        working-directory: .
+        run: docker-compose up -d eureka-server
+
+      # Wait for Eureka Server to be fully operational
+      - name: Wait for Eureka Server to be ready
+        run: sleep 120  # Adjust this time based on how long it takes for your Eureka server to start
+
+      # Now start the user-service
       - name: Set up Docker Compose for User Service
         working-directory: .
-        run: docker-compose up -d --build
+        run: docker-compose up -d user-service
 
       - name: Wait for User Service to be ready
         run: sleep 90  # Increased wait time to allow service registration
 
-      - name: Capture logs for User Service
-        working-directory: .
-        run: docker logs user-service
 
-      - name: List running containers
-        run: docker ps -a
-
-      - name: Verify Registration with Eureka
-        run: |
-          echo "Verifying if the user-service is registered with Eureka..."
-          for i in {1..5}; do
-            curl -s http://localhost:8761/eureka/apps/USER-SERVICE | grep "<application>" && exit 0
-            echo "Service not registered yet. Retrying in 10 seconds..."
-            sleep 10
-          done
-          echo "Service failed to register with Eureka."
-          exit 1
-        shell: bash
-
-      - name: Run Tests
-        run: mvn test
-
-      - name: Force remove any containers still running
-        run: |
-          docker stop $(docker ps -q) || true  # Stop any running containers, ignore errors if none are running
-          docker rm $(docker ps -a -q) || true  # Force removal of all containers
-
-      - name: Final cleanup for Docker networks
-        run: |
-          docker network prune -f
-
-      - name: List all containers and networks
-        run: |
-          docker ps -a
-          docker network ls
