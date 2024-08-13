@@ -10,7 +10,6 @@ services:
       - SPRING_CONFIG_LOCATION=file:/config/
       - spring.security.user.name=admin
       - spring.security.user.password=secret
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     volumes:
       - ./src/main/resources:/config
     networks:
@@ -18,5 +17,4 @@ services:
 
 networks:
   auth_net:
-    name: eureka-network
     external: true

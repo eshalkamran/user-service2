@@ -42,23 +42,12 @@ jobs:
       - name: Build the application
         run: mvn clean package
 
-      - name: Create network if not exists
-        run: |
-          docker network inspect eureka-network || docker network create eureka-network
-
-      - name: Set Eureka Server IP Address
-        run: |
-          EUREKA_IP=$(ipconfig getifaddr en0)
-          echo "EUREKA_IP=$EUREKA_IP" >> $GITHUB_ENV
-
       - name: Set up Docker Compose for User Service
         working-directory: .
-        env:
-          EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://${{ env.EUREKA_IP }}:8761/eureka/
         run: docker-compose up -d --build
 
       - name: Wait for User Service to be ready
-        run: sleep 90  # Increased wait time to allow service registration
+        run: sleep 90  # Increased wait time to allow service to start
 
       - name: Capture logs for User Service
         working-directory: .
@@ -67,20 +56,27 @@ jobs:
       - name: List running containers
         run: docker ps -a
 
-      - name: Verify Registration with Eureka
-        run: |
-          echo "Verifying if the user-service is registered with Eureka..."
-          for i in {1..5}; do
-            curl -s http://${{ env.EUREKA_IP }}:8761/eureka/apps/USER-SERVICE | grep "<application>" && exit 0
-            echo "Service not registered yet. Retrying in 10 seconds..."
-            sleep 10
-          done
-          echo "Service failed to register with Eureka."
-          exit 1
-        shell: bash
-
-      - name: Run Tests
+      - name: Run Java Tests
         run: mvn test
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Python Tests
+        run: |
+          pytest --cov=./ --cov-report=xml
+
+      - name: Ensure Code Coverage is Sufficient
+        run: |
+          coverage report --fail-under=80  # Set minimum coverage threshold to 80%
+          coverage xml
 
       - name: Force remove any containers still running
         run: |
