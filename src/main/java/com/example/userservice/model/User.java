@@ -1,11 +1,13 @@
 package com.example.userservice.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 @Entity
+@Table(name = "users")  // Specify the table name here
 public class User {
 
     @Id
