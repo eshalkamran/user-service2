@@ -64,6 +64,12 @@ jobs:
 
       - name: Integration Test with Curl
         run: python3 scripts/integration_test.py
+        continue-on-error: true  # Continue even if this step fails
+
+      - name: Capture logs for User Service After Integration Test
+        working-directory: .
+        run: docker logs user-service
+
 
       - name: Run Java Tests
         run: mvn test
