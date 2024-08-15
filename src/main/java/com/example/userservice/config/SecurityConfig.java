@@ -18,6 +18,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/users/register").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()  // Allow unauthenticated access to the /health endpoint
                         .anyRequest().authenticated()
                 );
         return http.build();
