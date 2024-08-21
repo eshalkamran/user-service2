@@ -63,7 +63,7 @@ jobs:
           pip install requests
 
       - name: Run Python Integration Tests
-        run: python3 scripts/test_service.py
+        run: python3 scripts/user_service.py
         continue-on-error: true  # Continue even if tests fail
 
       - name: Capture logs for User Service After Tests
